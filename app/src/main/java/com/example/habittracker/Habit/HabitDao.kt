@@ -21,4 +21,5 @@ interface HabitDao {
 
     @Query("SELECT * FROM habit")
     fun getAllHabits(): Flow<List<HabitEntity>>
+
 }

@@ -9,7 +9,8 @@ class HabitMapper {
             habitId = habit.habitId.toString(),
             description = habit.description,
             frequency = habit.frequency,
-            freqGroup = habit.freqGroup.name
+            freqGroup = habit.freqGroup.name,
+            name = habit.name
         )
     }
 
@@ -18,7 +19,8 @@ class HabitMapper {
             habitId = UUID.fromString(hEntity.habitId),
             description = hEntity.description,
             frequency = hEntity.frequency,
-            freqGroup = FreqGroup.valueOf(hEntity.freqGroup)
+            freqGroup = FreqGroup.valueOf(hEntity.freqGroup),
+            name = hEntity.name
         )
     }
 }
