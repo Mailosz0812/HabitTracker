@@ -1,5 +1,11 @@
 package com.example.habittracker.Habit
 
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.RectF
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
@@ -10,6 +16,7 @@ import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.cardview.widget.CardView
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -26,6 +33,9 @@ import kotlinx.coroutines.launch
 class HabitListFragment : Fragment(R.layout.fragment_habit_list) {
 
     private val swipeHandler = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
+        private val deleteBackground = ColorDrawable(Color.parseColor("#F44336")) // Czerwony
+        private val checkBackground = ColorDrawable(Color.parseColor("#4CAF50"))  // Zielony
+
         override fun onMove(
             recyclerView: RecyclerView,
             viewHolder: RecyclerView.ViewHolder,
@@ -47,6 +57,74 @@ class HabitListFragment : Fragment(R.layout.fragment_habit_list) {
                     viewModel.onCheckedChanged(swipedHabit.habit,!swipedHabit.isCompleted)
                 }
             }
+        }
+        override fun onChildDraw(
+            c: Canvas,
+            recyclerView: RecyclerView,
+            viewHolder: RecyclerView.ViewHolder,
+            dX: Float,
+            dY: Float,
+            actionState: Int,
+            isCurrentlyActive: Boolean
+        ) {
+            val itemView = viewHolder.itemView
+            val context = recyclerView.context
+
+            val paint = Paint()
+            val cornerRadius = 30f
+
+            val deleteIcon: Drawable? = ContextCompat.getDrawable(context, R.drawable.ic_delete_24)
+            val checkIcon: Drawable? = ContextCompat.getDrawable(context, R.drawable.ic_check_24)
+
+
+            val iconMargin = (itemView.height - (deleteIcon?.intrinsicHeight ?: 0)) / 2
+
+            if (dX > 0) {
+                paint.color = Color.parseColor("#4CAF50")
+                val background = RectF(
+                    itemView.left.toFloat(),
+                    itemView.top.toFloat(),
+                    itemView.left + dX,
+                    itemView.bottom.toFloat()
+                )
+                c.drawRoundRect(background, cornerRadius, cornerRadius, paint)
+                checkIcon?.let {
+                    val iconTop = itemView.top + (itemView.height - it.intrinsicHeight) / 2
+                    val iconBottom = iconTop + it.intrinsicHeight
+                    val iconLeft = itemView.left + iconMargin
+                    val iconRight = itemView.left + iconMargin + it.intrinsicWidth
+
+                    it.setBounds(iconLeft, iconTop, iconRight, iconBottom)
+                    it.draw(c)
+                }
+
+            } else if (dX < 0) {
+                paint.color = Color.parseColor("#F44336")
+                val background = RectF(
+                    itemView.right.toFloat() + dX,
+                    itemView.top.toFloat(),
+                    itemView.right.toFloat(),
+                    itemView.bottom.toFloat()
+                )
+                c.drawRoundRect(background, cornerRadius, cornerRadius, paint)
+
+                deleteIcon?.let {
+                    val iconTop = itemView.top + (itemView.height - it.intrinsicHeight) / 2
+                    val iconBottom = iconTop + it.intrinsicHeight
+                    val iconRight = itemView.right - iconMargin
+                    val iconLeft = itemView.right - iconMargin - it.intrinsicWidth
+
+                    it.setBounds(iconLeft, iconTop, iconRight, iconBottom)
+                    it.draw(c)
+                }
+            }
+
+            super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
+        }
+        override fun clearView(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) {
+            super.clearView(recyclerView, viewHolder)
+            viewHolder.itemView.translationX = 0f
+            viewHolder.itemView.alpha = 1f
         }
     }
     private val viewModel: HabitListViewModel by viewModels{
