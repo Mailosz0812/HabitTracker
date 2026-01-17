@@ -10,7 +10,8 @@ class HabitMapper {
             description = habit.description,
             frequency = habit.frequency,
             freqGroup = habit.freqGroup.name,
-            name = habit.name
+            name = habit.name,
+            color = habit.color
         )
     }
 
@@ -20,7 +21,8 @@ class HabitMapper {
             description = hEntity.description,
             frequency = hEntity.frequency,
             freqGroup = FreqGroup.valueOf(hEntity.freqGroup),
-            name = hEntity.name
+            name = hEntity.name,
+            color = hEntity.color
         )
     }
 }
