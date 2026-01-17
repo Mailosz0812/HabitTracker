@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.Spinner
@@ -26,9 +27,13 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.example.habittracker.HabitApplication
+import com.example.habittracker.NotificationWorker
 import com.example.habittracker.R
 import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit // Ten import jest kluczowy dla błędu 'SECONDS'
 
 class HabitListFragment : Fragment(R.layout.fragment_habit_list) {
 
@@ -127,10 +132,12 @@ class HabitListFragment : Fragment(R.layout.fragment_habit_list) {
             viewHolder.itemView.alpha = 1f
         }
     }
-    private val viewModel: HabitListViewModel by viewModels{
+
+    private val viewModel: HabitListViewModel by viewModels {
         val app = requireActivity().application as HabitApplication
-        HabitViewModelFactory(app.entryRepo,app.habitRepo)
+        HabitViewModelFactory(app.entryRepo, app.habitRepo)
     }
+
     private lateinit var adapter : HabitAdapter
 
     private val habitColors = listOf(
@@ -146,6 +153,11 @@ class HabitListFragment : Fragment(R.layout.fragment_habit_list) {
 
         val recyclerView = view.findViewById<RecyclerView>(R.id.habit_recycler_view)
 
+        val debugButton = view.findViewById<Button>(R.id.btn_debug_notify)
+        debugButton.setOnClickListener {
+            scheduleDebugNotification()
+            Toast.makeText(requireContext(), "Powiadomienie za 30 sekund!", Toast.LENGTH_SHORT).show()
+        }
 
         adapter = HabitAdapter(
             onItemClicked = { habitUi ->
@@ -162,7 +174,6 @@ class HabitListFragment : Fragment(R.layout.fragment_habit_list) {
             showHabitDialog(null)
         }
 
-
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.habits.collect { listOfHabits ->
@@ -172,10 +183,17 @@ class HabitListFragment : Fragment(R.layout.fragment_habit_list) {
         }
     }
 
+    private fun scheduleDebugNotification() {
+        val notificationWork = OneTimeWorkRequestBuilder<NotificationWorker>()
+            .setInitialDelay(30, TimeUnit.SECONDS)
+            .build()
+
+        WorkManager.getInstance(requireContext()).enqueue(notificationWork)
+    }
+
     private fun showHabitDialog(habitToEdit: Habit?) {
         val dialogView = layoutInflater.inflate(R.layout.dialog_add_habit, null)
 
-        val titleTextView = dialogView.findViewById<TextView>(R.id.text_title_dialog)
         val nameInput = dialogView.findViewById<EditText>(R.id.edit_habit_name)
         val descInput = dialogView.findViewById<EditText>(R.id.edit_habit_desc)
         val freqAmountInput = dialogView.findViewById<EditText>(R.id.edit_habit_freq_amount)
@@ -215,7 +233,6 @@ class HabitListFragment : Fragment(R.layout.fragment_habit_list) {
         }
 
         if (habitToEdit != null) {
-
             nameInput.setText(habitToEdit.name)
             descInput.setText(habitToEdit.description)
             freqAmountInput.setText(habitToEdit.frequency.toString())
@@ -234,7 +251,6 @@ class HabitListFragment : Fragment(R.layout.fragment_habit_list) {
             updateColorSelection(colorViews[0])
             freqSpinner.setSelection(1)
         }
-
 
         val buttonText = if (habitToEdit != null) "Zapisz" else "Dodaj"
 
@@ -286,7 +302,6 @@ class HabitListFragment : Fragment(R.layout.fragment_habit_list) {
             val habit = getItem(position)
             holder.bind(habit)
         }
-
     }
 
     private inner class HabitHolder(itemView: View) : RecyclerView.ViewHolder(itemView){
@@ -312,6 +327,8 @@ class HabitListFragment : Fragment(R.layout.fragment_habit_list) {
 
             doneCheckBox.setOnCheckedChangeListener(null)
             doneCheckBox.isChecked = habitUi.isCompleted
+            doneCheckBox.isClickable = false
+            doneCheckBox.isFocusable = false
 
             itemView.setOnClickListener {
                 adapter.onItemClicked(habitUi)
