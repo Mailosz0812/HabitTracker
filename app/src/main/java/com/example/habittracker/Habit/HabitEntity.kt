@@ -10,5 +10,6 @@ data class HabitEntity(
     val description: String,
     val frequency: Int,
     val freqGroup: String,
-    val name : String
+    val name : String,
+    val color: Int
 )

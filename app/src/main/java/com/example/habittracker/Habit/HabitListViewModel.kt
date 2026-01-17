@@ -27,12 +27,20 @@ class HabitListViewModel(private val entryRepo: HabitEntryRepo,private val habit
                 entryRepo.deleteEntry(habit)
             }
         }
+
     }
      fun addHabit(habit: Habit){
          viewModelScope.launch {
              habitRepo.addHabit(habit)
          }
     }
+
+    fun updateHabit(habit: Habit){
+        viewModelScope.launch {
+            habitRepo.updateHabit(habit)
+        }
+    }
+
     fun deleteHabit(habit: Habit) {
         viewModelScope.launch {
             habitRepo.deleteHabit(habit)

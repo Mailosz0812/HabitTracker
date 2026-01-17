@@ -8,18 +8,21 @@ import kotlinx.coroutines.flow.map
 import java.util.UUID
 
 class HabitRepo(private val habitDao: HabitDao,private val habitMapper: HabitMapper
-    ,private val habitEntryDao: HabitEntryDao, private val habitEntryMapper: HabitEntryMapper
+                ,private val habitEntryDao: HabitEntryDao, private val habitEntryMapper: HabitEntryMapper
 )
 {
     suspend fun addHabit(habit: Habit){
         val habitEntity: HabitEntity = habitMapper.toEntity(habit)
-
         habitDao.insertHabit(habitEntity)
+    }
+
+    suspend fun updateHabit(habit: Habit){
+        val habitEntity: HabitEntity = habitMapper.toEntity(habit)
+        habitDao.updateHabit(habitEntity)
     }
 
     suspend fun deleteHabit(habit: Habit){
         val habitEntity: HabitEntity = habitMapper.toEntity(habit)
-
         habitDao.deleteHabit(habitEntity)
     }
 
@@ -27,10 +30,8 @@ class HabitRepo(private val habitDao: HabitDao,private val habitMapper: HabitMap
         val idAsString: String = habitId.toString()
 
         return habitEntryDao.getHabitEntriesByHabit(idAsString)
-            .map{
-                list ->
+            .map{ list ->
                 list.map {entryEntity -> habitEntryMapper.toDomain(entryEntity)}
-
             }
     }
     fun getAllHabits(): Flow<List<Habit>>{
@@ -39,9 +40,4 @@ class HabitRepo(private val habitDao: HabitDao,private val habitMapper: HabitMap
                 list.map { habitMapper.toDomain(it)}
             }
     }
-
-
-
-
-
 }

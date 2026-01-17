@@ -25,6 +25,9 @@ interface HabitEntryDao {
     @Query("SELECT * FROM habit_entry WHERE timeStamp BETWEEN :startTmp AND :endTmp")
     fun getEntriesByDateRange(startTmp: Long, endTmp: Long) : Flow<List<HabitEntryEntity>>
 
+    @Query("SELECT * FROM habit_entry")
+    fun getAllEntries(): Flow<List<HabitEntryEntity>>
+
     @Query("DELETE FROM habit_entry WHERE habitId = :habitId AND timeStamp BETWEEN :startD AND :endD")
     suspend fun deleteEntryByHabitIdAndDayRange(habitId: String, startD: Long,endD: Long)
 

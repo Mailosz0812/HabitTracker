@@ -7,5 +7,6 @@ data class Habit(
     val name: String,
     val description: String,
     val frequency: Int,
-    val freqGroup: FreqGroup
+    val freqGroup: FreqGroup,
+    val color: Int
 )
