@@ -22,4 +22,6 @@ interface HabitDao {
     @Query("SELECT * FROM habit")
     fun getAllHabits(): Flow<List<HabitEntity>>
 
+    @Query("SELECT * FROM habit WHERE habitId = :habitId")
+    fun getHabitById(habitId: String): Flow<HabitEntity>
 }

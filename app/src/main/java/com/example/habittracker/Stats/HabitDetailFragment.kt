@@ -69,6 +69,12 @@ class HabitDetailFragment : Fragment(R.layout.fragment_habit_detail) {
         view.findViewById<TextView>(R.id.detail_title).text = state.habit?.name
         view.findViewById<TextView>(R.id.detail_desc).text = state.habit?.description
 
+        // --- NOWE POLA ---
+        val streakLabel = if (state.bestStreak == 1) "dzień" else "dni"
+        view.findViewById<TextView>(R.id.detail_best_streak).text = "${state.bestStreak} $streakLabel"
+        view.findViewById<TextView>(R.id.detail_best_day).text = state.bestDayOfWeek
+        // ----------------
+
         view.findViewById<TextView>(R.id.calendar_month_name).text =
             "${YearMonth.now().month.getDisplayName(TextStyle.FULL, Locale.getDefault())} ${YearMonth.now().year}"
 
@@ -102,16 +108,20 @@ class HabitDetailFragment : Fragment(R.layout.fragment_habit_detail) {
             0
         }
 
-        view.findViewById<TextView>(R.id.month_percent_text).text = "$percentage%"
+        val percentTextView = view.findViewById<TextView>(R.id.month_percent_text)
+        percentTextView.text = "$percentage%"
+
         val progressBar = view.findViewById<ProgressBar>(R.id.month_progress_bar)
         progressBar.progress = percentage
 
         val color = when {
-            percentage >= 80 -> 0xFF4CAF50.toInt() // Zielony (Świetnie)
-            percentage >= 50 -> 0xFFFFC107.toInt() // Żółty (Średnio)
-            else -> 0xFFF44336.toInt()             // Czerwony (Słabo)
+            percentage >= 80 -> 0xFF4CAF50.toInt() // Zielony
+            percentage >= 50 -> 0xFFFFC107.toInt() // Żółty
+            else -> 0xFFF44336.toInt()             // Czerwony
         }
+
         progressBar.progressTintList = android.content.res.ColorStateList.valueOf(color)
+        percentTextView.setTextColor(color)
 
         view.findViewById<TextView>(R.id.month_count_text).text = "Regularność: $activeDaysCount / $daysPassed dni"
     }

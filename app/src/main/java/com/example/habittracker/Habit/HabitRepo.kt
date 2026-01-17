@@ -40,4 +40,20 @@ class HabitRepo(private val habitDao: HabitDao,private val habitMapper: HabitMap
                 list.map { habitMapper.toDomain(it)}
             }
     }
+
+    fun getHabitById(habitId: String): Flow<Habit> {
+        return habitDao.getHabitById(habitId)
+            .map { entity ->
+                // Zabezpieczenie na wypadek gdyby entity było null (np. przy usuwaniu)
+                if (entity != null) habitMapper.toDomain(entity) else throw Exception("Habit not found")
+            }
+    }
+
+    // 2. Pobieranie wpisów dla konkretnego nawyku (jako String)
+    fun getEntriesForHabit(habitId: String): Flow<List<HabitEntry>> {
+        return habitEntryDao.getHabitEntriesByHabit(habitId)
+            .map{ list ->
+                list.map { entryEntity -> habitEntryMapper.toDomain(entryEntity) }
+            }
+    }
 }

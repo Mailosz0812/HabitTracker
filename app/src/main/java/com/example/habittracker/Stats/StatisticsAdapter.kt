@@ -1,5 +1,7 @@
 package com.example.habittracker.Stats
 
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,7 +18,6 @@ class StatisticsAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): StatsHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_habit_statistic, parent, false)
-        // Przekazujemy onItemClick do Holdera
         return StatsHolder(view, onItemClick)
     }
 
@@ -29,32 +30,48 @@ class StatisticsAdapter(
         private val onItemClick: (HabitStatisticUi) -> Unit
     ) : RecyclerView.ViewHolder(itemView) {
         private val nameTv: TextView = itemView.findViewById(R.id.stat_habit_name)
-        private val streakTv: TextView = itemView.findViewById(R.id.stat_streak_value)
+        private val streakValueTv: TextView = itemView.findViewById(R.id.stat_streak_value)
+        private val streakLabelTv: TextView = itemView.findViewById(R.id.stat_streak_label)
+
+        // USUNIĘTO: private val bestStreakTv
+
+        private val percentTv: TextView = itemView.findViewById(R.id.stat_percent_text)
         private val progressBar: ProgressBar = itemView.findViewById(R.id.stat_progress_bar)
-        private val totalTv: TextView = itemView.findViewById(R.id.stat_total_count)
+        private val countTv: TextView = itemView.findViewById(R.id.stat_count_text)
 
         fun bind(stat: HabitStatisticUi) {
             nameTv.text = stat.habit.name
 
-            val dayLabel = if (stat.streak == 1) "day" else "days"
-            streakTv.text = "${stat.streak} $dayLabel"
+            // Aktualny Streak
+            val dayLabel = if (stat.streak == 1) "dzień" else "dni"
+            streakValueTv.text = "${stat.streak} $dayLabel"
 
             if (stat.streak > 0) {
-                streakTv.setTextColor(android.graphics.Color.parseColor("#FF9800"))
+                val orange = Color.parseColor("#FF9800")
+                streakValueTv.setTextColor(orange)
+                streakLabelTv.setTextColor(orange)
             } else {
-                streakTv.setTextColor(android.graphics.Color.GRAY)
+                streakValueTv.setTextColor(Color.GRAY)
+                streakLabelTv.setTextColor(Color.GRAY)
             }
 
-            progressBar.progress = stat.completionRate30Days
-            if (stat.completionRate30Days >= 80) {
-                progressBar.progressTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#4CAF50")) // Zielony
-            } else if (stat.completionRate30Days >= 50) {
-                progressBar.progressTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#FFC107")) // Żółty
-            } else {
-                progressBar.progressTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#F44336")) // Czerwony
+            // USUNIĘTO blok kodu obsługujący bestStreakTv
+
+            // Pasek postępu
+            val percentage = stat.completionRate
+            progressBar.progress = percentage
+            percentTv.text = "$percentage%"
+
+            val color = when {
+                percentage >= 80 -> Color.parseColor("#4CAF50")
+                percentage >= 50 -> Color.parseColor("#FFC107")
+                else -> Color.parseColor("#F44336")
             }
 
-            totalTv.text = "Total completions: ${stat.totalCompletions}"
+            progressBar.progressTintList = ColorStateList.valueOf(color)
+            percentTv.setTextColor(color)
+
+            countTv.text = "Regularność: ${stat.daysCompletedInMonth} / ${stat.daysPassedInMonth} dni"
 
             itemView.setOnClickListener {
                 onItemClick(stat)
