@@ -10,18 +10,24 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.habittracker.R
 
-class StatisticsAdapter : ListAdapter<HabitStatisticUi, StatisticsAdapter.StatsHolder>(StatsDiffCallback) {
+class StatisticsAdapter(
+    private val onItemClick: (HabitStatisticUi) -> Unit
+) : ListAdapter<HabitStatisticUi, StatisticsAdapter.StatsHolder>(StatsDiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): StatsHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_habit_statistic, parent, false)
-        return StatsHolder(view)
+        // Przekazujemy onItemClick do Holdera
+        return StatsHolder(view, onItemClick)
     }
 
     override fun onBindViewHolder(holder: StatsHolder, position: Int) {
         holder.bind(getItem(position))
     }
 
-    class StatsHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    class StatsHolder(
+        itemView: View,
+        private val onItemClick: (HabitStatisticUi) -> Unit
+    ) : RecyclerView.ViewHolder(itemView) {
         private val nameTv: TextView = itemView.findViewById(R.id.stat_habit_name)
         private val streakTv: TextView = itemView.findViewById(R.id.stat_streak_value)
         private val progressBar: ProgressBar = itemView.findViewById(R.id.stat_progress_bar)
@@ -30,11 +36,9 @@ class StatisticsAdapter : ListAdapter<HabitStatisticUi, StatisticsAdapter.StatsH
         fun bind(stat: HabitStatisticUi) {
             nameTv.text = stat.habit.name
 
-            // ZMIANA: Obsługa liczby pojedynczej i mnogiej
             val dayLabel = if (stat.streak == 1) "day" else "days"
             streakTv.text = "${stat.streak} $dayLabel"
 
-            // Kolorowanie streaka na pomarańczowo jeśli > 0
             if (stat.streak > 0) {
                 streakTv.setTextColor(android.graphics.Color.parseColor("#FF9800"))
             } else {
@@ -42,7 +46,6 @@ class StatisticsAdapter : ListAdapter<HabitStatisticUi, StatisticsAdapter.StatsH
             }
 
             progressBar.progress = stat.completionRate30Days
-            // Zmieniamy kolor paska w zależności od postępu
             if (stat.completionRate30Days >= 80) {
                 progressBar.progressTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#4CAF50")) // Zielony
             } else if (stat.completionRate30Days >= 50) {
@@ -52,6 +55,10 @@ class StatisticsAdapter : ListAdapter<HabitStatisticUi, StatisticsAdapter.StatsH
             }
 
             totalTv.text = "Total completions: ${stat.totalCompletions}"
+
+            itemView.setOnClickListener {
+                onItemClick(stat)
+            }
         }
     }
 

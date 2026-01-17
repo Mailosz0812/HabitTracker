@@ -57,4 +57,6 @@ dependencies {
     implementation("androidx.navigation:navigation-fragment-ktx:$navVersion")
     implementation("androidx.navigation:navigation-ui-ktx:$navVersion")
     implementation("com.google.code.gson:gson:2.10.1")
+    implementation("androidx.navigation:navigation-fragment-ktx:$navVersion") // This is correct
+    implementation("androidx.navigation:navigation-ui-ktx:$navVersion")
 }

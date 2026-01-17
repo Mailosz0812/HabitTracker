@@ -15,5 +15,23 @@
         android:id="@+id/statisticsFragment"
         android:name="com.example.habittracker.Stats.StatisticsFragment"
         android:label="Statistics"
-        tools:layout="@layout/fragment_statistics" />
+        tools:layout="@layout/fragment_statistics">
+
+        <action
+            android:id="@+id/action_statistics_to_detail"
+            app:destination="@id/habitDetailFragment" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/habitDetailFragment"
+        android:name="com.example.habittracker.Stats.HabitDetailFragment"
+        android:label="Habit Details"
+        tools:layout="@layout/fragment_habit_detail">
+
+        <argument
+            android:name="habitId"
+            app:argType="string" />
+    </fragment>
+
 </navigation>

@@ -7,6 +7,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.fragment.findNavController // <-- ADD THIS IMPORT
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.habittracker.Habit.HabitViewModelFactory
@@ -25,7 +26,15 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
         super.onViewCreated(view, savedInstanceState)
 
         val recyclerView = view.findViewById<RecyclerView>(R.id.stats_recycler_view)
-        val adapter = StatisticsAdapter()
+        val adapter = StatisticsAdapter { statUi ->
+            val bundle = Bundle().apply {
+                putString("habitId", statUi.habit.habitId.toString())
+            }
+            findNavController().navigate(
+                R.id.action_statistics_to_detail,
+                bundle
+            )
+        }
 
         recyclerView.adapter = adapter
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
