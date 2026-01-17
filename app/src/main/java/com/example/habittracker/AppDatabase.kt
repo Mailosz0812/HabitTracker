@@ -11,7 +11,7 @@ import com.example.habittracker.HabitEntry.HabitEntryEntity
 
 @Database(
     entities = [HabitEntity::class, HabitEntryEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase: RoomDatabase() {
@@ -29,7 +29,7 @@ abstract class AppDatabase: RoomDatabase() {
                     AppDatabase::class.java,
                     "habit_tracker_database"
                 )
-
+                    .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance
                 instance
