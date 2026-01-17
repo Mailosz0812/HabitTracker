@@ -1,15 +1,23 @@
 package com.example.habittracker.Habit
 
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.RectF
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.cardview.widget.CardView
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -19,13 +27,20 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.example.habittracker.HabitApplication
+import com.example.habittracker.NotificationWorker
 import com.example.habittracker.R
 import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit // Ten import jest kluczowy dla błędu 'SECONDS'
 
 class HabitListFragment : Fragment(R.layout.fragment_habit_list) {
 
     private val swipeHandler = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
+        private val deleteBackground = ColorDrawable(Color.parseColor("#F44336")) // Czerwony
+        private val checkBackground = ColorDrawable(Color.parseColor("#4CAF50"))  // Zielony
+
         override fun onMove(
             recyclerView: RecyclerView,
             viewHolder: RecyclerView.ViewHolder,
@@ -48,11 +63,81 @@ class HabitListFragment : Fragment(R.layout.fragment_habit_list) {
                 }
             }
         }
+        override fun onChildDraw(
+            c: Canvas,
+            recyclerView: RecyclerView,
+            viewHolder: RecyclerView.ViewHolder,
+            dX: Float,
+            dY: Float,
+            actionState: Int,
+            isCurrentlyActive: Boolean
+        ) {
+            val itemView = viewHolder.itemView
+            val context = recyclerView.context
+
+            val paint = Paint()
+            val cornerRadius = 30f
+
+            val deleteIcon: Drawable? = ContextCompat.getDrawable(context, R.drawable.ic_delete_24)
+            val checkIcon: Drawable? = ContextCompat.getDrawable(context, R.drawable.ic_check_24)
+
+
+            val iconMargin = (itemView.height - (deleteIcon?.intrinsicHeight ?: 0)) / 2
+
+            if (dX > 0) {
+                paint.color = Color.parseColor("#4CAF50")
+                val background = RectF(
+                    itemView.left.toFloat(),
+                    itemView.top.toFloat(),
+                    itemView.left + dX,
+                    itemView.bottom.toFloat()
+                )
+                c.drawRoundRect(background, cornerRadius, cornerRadius, paint)
+                checkIcon?.let {
+                    val iconTop = itemView.top + (itemView.height - it.intrinsicHeight) / 2
+                    val iconBottom = iconTop + it.intrinsicHeight
+                    val iconLeft = itemView.left + iconMargin
+                    val iconRight = itemView.left + iconMargin + it.intrinsicWidth
+
+                    it.setBounds(iconLeft, iconTop, iconRight, iconBottom)
+                    it.draw(c)
+                }
+
+            } else if (dX < 0) {
+                paint.color = Color.parseColor("#F44336")
+                val background = RectF(
+                    itemView.right.toFloat() + dX,
+                    itemView.top.toFloat(),
+                    itemView.right.toFloat(),
+                    itemView.bottom.toFloat()
+                )
+                c.drawRoundRect(background, cornerRadius, cornerRadius, paint)
+
+                deleteIcon?.let {
+                    val iconTop = itemView.top + (itemView.height - it.intrinsicHeight) / 2
+                    val iconBottom = iconTop + it.intrinsicHeight
+                    val iconRight = itemView.right - iconMargin
+                    val iconLeft = itemView.right - iconMargin - it.intrinsicWidth
+
+                    it.setBounds(iconLeft, iconTop, iconRight, iconBottom)
+                    it.draw(c)
+                }
+            }
+
+            super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
+        }
+        override fun clearView(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) {
+            super.clearView(recyclerView, viewHolder)
+            viewHolder.itemView.translationX = 0f
+            viewHolder.itemView.alpha = 1f
+        }
     }
-    private val viewModel: HabitListViewModel by viewModels{
+
+    private val viewModel: HabitListViewModel by viewModels {
         val app = requireActivity().application as HabitApplication
-        HabitViewModelFactory(app.entryRepo,app.habitRepo)
+        HabitViewModelFactory(app.entryRepo, app.habitRepo)
     }
+
     private lateinit var adapter : HabitAdapter
 
     private val habitColors = listOf(
@@ -68,6 +153,11 @@ class HabitListFragment : Fragment(R.layout.fragment_habit_list) {
 
         val recyclerView = view.findViewById<RecyclerView>(R.id.habit_recycler_view)
 
+        val debugButton = view.findViewById<Button>(R.id.btn_debug_notify)
+        debugButton.setOnClickListener {
+            scheduleDebugNotification()
+            Toast.makeText(requireContext(), "Powiadomienie za 30 sekund!", Toast.LENGTH_SHORT).show()
+        }
 
         adapter = HabitAdapter(
             onItemClicked = { habitUi ->
@@ -84,7 +174,6 @@ class HabitListFragment : Fragment(R.layout.fragment_habit_list) {
             showHabitDialog(null)
         }
 
-
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.habits.collect { listOfHabits ->
@@ -94,10 +183,17 @@ class HabitListFragment : Fragment(R.layout.fragment_habit_list) {
         }
     }
 
+    private fun scheduleDebugNotification() {
+        val notificationWork = OneTimeWorkRequestBuilder<NotificationWorker>()
+            .setInitialDelay(30, TimeUnit.SECONDS)
+            .build()
+
+        WorkManager.getInstance(requireContext()).enqueue(notificationWork)
+    }
+
     private fun showHabitDialog(habitToEdit: Habit?) {
         val dialogView = layoutInflater.inflate(R.layout.dialog_add_habit, null)
 
-        val titleTextView = dialogView.findViewById<TextView>(R.id.text_title_dialog)
         val nameInput = dialogView.findViewById<EditText>(R.id.edit_habit_name)
         val descInput = dialogView.findViewById<EditText>(R.id.edit_habit_desc)
         val freqAmountInput = dialogView.findViewById<EditText>(R.id.edit_habit_freq_amount)
@@ -137,7 +233,6 @@ class HabitListFragment : Fragment(R.layout.fragment_habit_list) {
         }
 
         if (habitToEdit != null) {
-
             nameInput.setText(habitToEdit.name)
             descInput.setText(habitToEdit.description)
             freqAmountInput.setText(habitToEdit.frequency.toString())
@@ -156,7 +251,6 @@ class HabitListFragment : Fragment(R.layout.fragment_habit_list) {
             updateColorSelection(colorViews[0])
             freqSpinner.setSelection(1)
         }
-
 
         val buttonText = if (habitToEdit != null) "Zapisz" else "Dodaj"
 
@@ -208,7 +302,6 @@ class HabitListFragment : Fragment(R.layout.fragment_habit_list) {
             val habit = getItem(position)
             holder.bind(habit)
         }
-
     }
 
     private inner class HabitHolder(itemView: View) : RecyclerView.ViewHolder(itemView){
@@ -234,6 +327,8 @@ class HabitListFragment : Fragment(R.layout.fragment_habit_list) {
 
             doneCheckBox.setOnCheckedChangeListener(null)
             doneCheckBox.isChecked = habitUi.isCompleted
+            doneCheckBox.isClickable = false
+            doneCheckBox.isFocusable = false
 
             itemView.setOnClickListener {
                 adapter.onItemClicked(habitUi)
