@@ -39,6 +39,9 @@ class HabitListFragment : Fragment(R.layout.fragment_habit_list) {
             },
             onCheckChanged = { habit, isChecked ->
                 viewModel.onCheckedChanged(habit.habit,isChecked)
+            },
+            onDeleteClicked = { habit ->
+                viewModel.deleteHabit(habit)
             }
         )
         recyclerView.adapter = adapter
@@ -90,7 +93,8 @@ class HabitListFragment : Fragment(R.layout.fragment_habit_list) {
 
     private inner class HabitAdapter(
         val onItemClicked: (HabitItemUi) -> Unit,
-        val onCheckChanged: (HabitItemUi, Boolean) -> Unit
+        val onCheckChanged: (HabitItemUi, Boolean) -> Unit,
+        val onDeleteClicked: (Habit) -> Unit
     ) : ListAdapter<HabitItemUi, HabitHolder>(HabitDiffCallback) {
         override fun onCreateViewHolder(
             parent: ViewGroup,
@@ -111,6 +115,7 @@ class HabitListFragment : Fragment(R.layout.fragment_habit_list) {
         private val nameTextView: TextView = itemView.findViewById(R.id.habit_name)
         private val descriptionTextView: TextView = itemView.findViewById(R.id.habit_desc)
         private val doneCheckBox: CheckBox = itemView.findViewById(R.id.habit_check)
+        private val deleteButton: android.widget.ImageButton = itemView.findViewById(R.id.btn_delete_habit)
 
         fun bind(habit: HabitItemUi){
             nameTextView.text = habit.habit.name
@@ -125,6 +130,9 @@ class HabitListFragment : Fragment(R.layout.fragment_habit_list) {
 
             doneCheckBox.setOnCheckedChangeListener { _, isChecked ->
                 adapter.onCheckChanged(habit,isChecked)
+            }
+            deleteButton.setOnClickListener {
+                adapter.onDeleteClicked(habit.habit)
             }
         }
     }
