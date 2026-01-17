@@ -13,6 +13,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.habittracker.HabitApplication
@@ -21,39 +22,51 @@ import kotlinx.coroutines.launch
 
 class HabitListFragment : Fragment(R.layout.fragment_habit_list) {
 
+    private val swipeHandler = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
+        override fun onMove(
+            recyclerView: RecyclerView,
+            viewHolder: RecyclerView.ViewHolder,
+            target: RecyclerView.ViewHolder
+        ): Boolean {
+            return false
+        }
+        override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+            val position = viewHolder.bindingAdapterPosition
+            if (position == RecyclerView.NO_POSITION){
+                return
+            }
+            val swipedHabit = adapter.currentList[position]
+            when (direction) {
+                ItemTouchHelper.LEFT -> {
+                    viewModel.deleteHabit(swipedHabit.habit)
+                }
+                ItemTouchHelper.RIGHT -> {
+                    viewModel.onCheckedChanged(swipedHabit.habit,!swipedHabit.isCompleted)
+                }
+            }
+        }
+    }
     private val viewModel: HabitListViewModel by viewModels{
         val app = requireActivity().application as HabitApplication
         HabitViewModelFactory(app.entryRepo,app.habitRepo)
     }
     private lateinit var adapter : HabitAdapter
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         val recyclerView = view.findViewById<RecyclerView>(R.id.habit_recycler_view)
-
-
         adapter = HabitAdapter(
             onItemClicked = { habit ->
                 Toast.makeText(context, "Kliknięto: ${habit.habit.name}", Toast.LENGTH_SHORT).show()
             },
-            onCheckChanged = { habit, isChecked ->
-                viewModel.onCheckedChanged(habit.habit,isChecked)
-            },
-            onDeleteClicked = { habit ->
-                viewModel.deleteHabit(habit)
-            }
         )
         recyclerView.adapter = adapter
         recyclerView.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(requireContext())
-
+        val itemTouchHelper = ItemTouchHelper(swipeHandler)
+        itemTouchHelper.attachToRecyclerView(recyclerView)
         val addButton = view.findViewById<com.google.android.material.floatingactionbutton.FloatingActionButton>(R.id.fab_add_habit)
-
         addButton.setOnClickListener {
             showAddHabitDialog()
         }
-
-
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.habits.collect { listOfHabits ->
@@ -93,8 +106,6 @@ class HabitListFragment : Fragment(R.layout.fragment_habit_list) {
 
     private inner class HabitAdapter(
         val onItemClicked: (HabitItemUi) -> Unit,
-        val onCheckChanged: (HabitItemUi, Boolean) -> Unit,
-        val onDeleteClicked: (Habit) -> Unit
     ) : ListAdapter<HabitItemUi, HabitHolder>(HabitDiffCallback) {
         override fun onCreateViewHolder(
             parent: ViewGroup,
@@ -103,19 +114,16 @@ class HabitListFragment : Fragment(R.layout.fragment_habit_list) {
             val view = layoutInflater.inflate(R.layout.list_item_habit,parent,false)
             return HabitHolder(view)
         }
-
         override fun onBindViewHolder(holder: HabitHolder, position: Int) {
             val habit = getItem(position)
             holder.bind(habit)
         }
-
     }
 
     private inner class HabitHolder(itemView: View) : RecyclerView.ViewHolder(itemView){
         private val nameTextView: TextView = itemView.findViewById(R.id.habit_name)
         private val descriptionTextView: TextView = itemView.findViewById(R.id.habit_desc)
         private val doneCheckBox: CheckBox = itemView.findViewById(R.id.habit_check)
-        private val deleteButton: android.widget.ImageButton = itemView.findViewById(R.id.btn_delete_habit)
 
         fun bind(habit: HabitItemUi){
             nameTextView.text = habit.habit.name
@@ -126,13 +134,6 @@ class HabitListFragment : Fragment(R.layout.fragment_habit_list) {
 
             itemView.setOnClickListener {
                 adapter.onItemClicked(habit)
-            }
-
-            doneCheckBox.setOnCheckedChangeListener { _, isChecked ->
-                adapter.onCheckChanged(habit,isChecked)
-            }
-            deleteButton.setOnClickListener {
-                adapter.onDeleteClicked(habit.habit)
             }
         }
     }
