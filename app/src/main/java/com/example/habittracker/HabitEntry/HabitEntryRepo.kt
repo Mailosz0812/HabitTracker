@@ -43,6 +43,12 @@ class HabitEntryRepo(private val habitDao: HabitDao,private val habitMapper: Hab
         }
     }
 
+    fun getAllEntries(): Flow<List<HabitEntry>> {
+        return habitEntryDao.getAllEntries().map { list ->
+            list.map { habitEntryMapper.toDomain(it) }
+        }
+    }
+
     suspend fun addEntry(habit: Habit){
         val entry = HabitEntry(
             habitId = habit.habitId,
