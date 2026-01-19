@@ -1,3 +1,25 @@
 <resources>
     <string name="app_name">HabitTracker</string>
+
+    <string name="add">Dodaj</string>
+    <string name="save">Zapisz</string>
+    <string name="cancel">Anuluj</string>
+    <string name="monthly">Miesięcznie</string>
+    <string name="daily">Dziennie</string>
+    <string name="weekly">Tygodniowo</string>
+    <string name="name_is_required">Nazwa jest wymagana</string>
+    <string name="debug_notify_message">Zaplanowano powiadomienie testowe</string>
+
+    <string name="notif_channel_name">Przypomnienia o nawykach</string>
+    <string name="notif_channel_desc">Codzienne przypomnienia o uzupełnieniu nawyków</string>
+    <string name="notif_title_daily">Codzienna motywacja</string>
+    <string name="notif_default_msg">Pamiętaj o swoich nawykach!</string>
+    <string name="notif_default_author">HabitTracker</string>
+    <string name="notif_fallback_title">Czas uzupełnić nawyki!</string>
+    <string name="notif_fallback_msg">Nie poddawaj się!</string>
+
+    <string name="day_singular">dzień</string>
+    <string name="day_plural">dni</string>
+    <string name="regularity_format">Regularność: %1$d / %2$d dni</string>
+    <string name="no_data">Brak danych</string>
 </resources>

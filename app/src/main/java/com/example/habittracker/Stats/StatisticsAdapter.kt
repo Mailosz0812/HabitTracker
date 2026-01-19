@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -33,7 +34,6 @@ class StatisticsAdapter(
         private val streakValueTv: TextView = itemView.findViewById(R.id.stat_streak_value)
         private val streakLabelTv: TextView = itemView.findViewById(R.id.stat_streak_label)
 
-        // USUNIĘTO: private val bestStreakTv
 
         private val percentTv: TextView = itemView.findViewById(R.id.stat_percent_text)
         private val progressBar: ProgressBar = itemView.findViewById(R.id.stat_progress_bar)
@@ -42,12 +42,16 @@ class StatisticsAdapter(
         fun bind(stat: HabitStatisticUi) {
             nameTv.text = stat.habit.name
 
-            // Aktualny Streak
-            val dayLabel = if (stat.streak == 1) "dzień" else "dni"
+            val context = itemView.context
+            val dayLabel = if (stat.streak == 1)
+                context.getString(R.string.day_singular)
+            else
+                context.getString(R.string.day_plural)
+
             streakValueTv.text = "${stat.streak} $dayLabel"
 
             if (stat.streak > 0) {
-                val orange = Color.parseColor("#FF9800")
+                val orange = ContextCompat.getColor(context,R.color.habit_streak_orange)
                 streakValueTv.setTextColor(orange)
                 streakLabelTv.setTextColor(orange)
             } else {
@@ -55,23 +59,24 @@ class StatisticsAdapter(
                 streakLabelTv.setTextColor(Color.GRAY)
             }
 
-            // USUNIĘTO blok kodu obsługujący bestStreakTv
-
-            // Pasek postępu
             val percentage = stat.completionRate
             progressBar.progress = percentage
             percentTv.text = "$percentage%"
 
             val color = when {
-                percentage >= 80 -> Color.parseColor("#4CAF50")
-                percentage >= 50 -> Color.parseColor("#FFC107")
-                else -> Color.parseColor("#F44336")
+                percentage >= 80 -> ContextCompat.getColor(context,R.color.habit_done_green)
+                percentage >= 50 -> ContextCompat.getColor(context,R.color.percentage_50)
+                else -> ContextCompat.getColor(context,R.color.habit_delete_red)
             }
 
             progressBar.progressTintList = ColorStateList.valueOf(color)
             percentTv.setTextColor(color)
 
-            countTv.text = "Regularność: ${stat.daysCompletedInMonth} / ${stat.daysPassedInMonth} dni"
+            countTv.text = context.getString(
+                R.string.regularity_format,
+                stat.daysCompletedInMonth,
+                stat.daysPassedInMonth
+            )
 
             itemView.setOnClickListener {
                 onItemClick(stat)

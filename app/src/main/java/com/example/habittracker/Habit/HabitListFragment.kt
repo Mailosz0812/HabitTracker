@@ -33,13 +33,11 @@ import com.example.habittracker.HabitApplication
 import com.example.habittracker.NotificationWorker
 import com.example.habittracker.R
 import kotlinx.coroutines.launch
-import java.util.concurrent.TimeUnit // Ten import jest kluczowy dla błędu 'SECONDS'
+import java.util.concurrent.TimeUnit
 
 class HabitListFragment : Fragment(R.layout.fragment_habit_list) {
 
     private val swipeHandler = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
-        private val deleteBackground = ColorDrawable(Color.parseColor("#F44336")) // Czerwony
-        private val checkBackground = ColorDrawable(Color.parseColor("#4CAF50"))  // Zielony
 
         override fun onMove(
             recyclerView: RecyclerView,
@@ -85,7 +83,7 @@ class HabitListFragment : Fragment(R.layout.fragment_habit_list) {
             val iconMargin = (itemView.height - (deleteIcon?.intrinsicHeight ?: 0)) / 2
 
             if (dX > 0) {
-                paint.color = Color.parseColor("#4CAF50")
+                paint.color = ContextCompat.getColor(context,R.color.habit_done_green)
                 val background = RectF(
                     itemView.left.toFloat(),
                     itemView.top.toFloat(),
@@ -104,7 +102,7 @@ class HabitListFragment : Fragment(R.layout.fragment_habit_list) {
                 }
 
             } else if (dX < 0) {
-                paint.color = Color.parseColor("#F44336")
+                paint.color = ContextCompat.getColor(context,R.color.habit_delete_red)
                 val background = RectF(
                     itemView.right.toFloat() + dX,
                     itemView.top.toFloat(),
@@ -140,13 +138,15 @@ class HabitListFragment : Fragment(R.layout.fragment_habit_list) {
 
     private lateinit var adapter : HabitAdapter
 
-    private val habitColors = listOf(
-        0xFFFFCDD2.toInt(),
-        0xFFC8E6C9.toInt(),
-        0xFFBBDEFB.toInt(),
-        0xFFFFF9C4.toInt(),
-        0xFFE1BEE7.toInt()
-    )
+    private val habitColors by lazy {
+        listOf(
+            ContextCompat.getColor(requireContext(), R.color.card_pastel_red),
+            ContextCompat.getColor(requireContext(), R.color.card_pastel_green),
+            ContextCompat.getColor(requireContext(), R.color.card_pastel_blue),
+            ContextCompat.getColor(requireContext(), R.color.card_pastel_yellow),
+            ContextCompat.getColor(requireContext(), R.color.card_pastel_purple)
+        )
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -156,7 +156,7 @@ class HabitListFragment : Fragment(R.layout.fragment_habit_list) {
         val debugButton = view.findViewById<Button>(R.id.btn_debug_notify)
         debugButton.setOnClickListener {
             scheduleDebugNotification()
-            Toast.makeText(requireContext(), "Powiadomienie za 30 sekund!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), getString(R.string.debug_notify_message), Toast.LENGTH_SHORT).show()
         }
 
         adapter = HabitAdapter(
@@ -199,7 +199,11 @@ class HabitListFragment : Fragment(R.layout.fragment_habit_list) {
         val freqAmountInput = dialogView.findViewById<EditText>(R.id.edit_habit_freq_amount)
         val freqSpinner = dialogView.findViewById<Spinner>(R.id.spinner_freq_group)
 
-        val freqGroupsNames = listOf("Miesięcznie", "Dziennie", "Tygodniowo")
+        val freqGroupsNames = listOf(
+            getString(R.string.monthly),
+            getString(R.string.daily),
+            getString(R.string.weekly)
+        )
         val freqGroupValues = listOf(FreqGroup.MONTHLY, FreqGroup.DAILY, FreqGroup.WEEKLY)
 
         val spinnerAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, freqGroupsNames)
@@ -252,7 +256,7 @@ class HabitListFragment : Fragment(R.layout.fragment_habit_list) {
             freqSpinner.setSelection(1)
         }
 
-        val buttonText = if (habitToEdit != null) "Zapisz" else "Dodaj"
+        val buttonText = if (habitToEdit != null) R.string.save else R.string.add
 
         androidx.appcompat.app.AlertDialog.Builder(requireContext())
             .setView(dialogView)
@@ -283,10 +287,10 @@ class HabitListFragment : Fragment(R.layout.fragment_habit_list) {
                         viewModel.updateHabit(updatedHabit)
                     }
                 } else {
-                    Toast.makeText(requireContext(), "Nazwa jest wymagana", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), getString(R.string.name_is_required), Toast.LENGTH_SHORT).show()
                 }
             }
-            .setNegativeButton("Anuluj", null)
+            .setNegativeButton(getString(R.string.cancel), null)
             .show()
     }
 
@@ -317,9 +321,9 @@ class HabitListFragment : Fragment(R.layout.fragment_habit_list) {
             descriptionTextView.text = habit.description
 
             val freqText = when(habit.freqGroup) {
-                FreqGroup.DAILY -> "Dziennie"
-                FreqGroup.WEEKLY -> "Tygodniowo"
-                FreqGroup.MONTHLY -> "Miesięcznie"
+                FreqGroup.DAILY -> getString(R.string.daily)
+                FreqGroup.WEEKLY -> getString(R.string.weekly)
+                FreqGroup.MONTHLY -> getString(R.string.monthly)
             }
             freqTextView.text = "${habit.frequency} / $freqText"
 

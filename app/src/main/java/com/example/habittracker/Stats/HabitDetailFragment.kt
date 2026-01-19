@@ -69,11 +69,15 @@ class HabitDetailFragment : Fragment(R.layout.fragment_habit_detail) {
         view.findViewById<TextView>(R.id.detail_title).text = state.habit?.name
         view.findViewById<TextView>(R.id.detail_desc).text = state.habit?.description
 
-        // --- NOWE POLA ---
-        val streakLabel = if (state.bestStreak == 1) "dzień" else "dni"
+
+        val streakLabel = if (state.bestStreak == 1) getString(R.string.day_singular) else getString(R.string.day_plural)
         view.findViewById<TextView>(R.id.detail_best_streak).text = "${state.bestStreak} $streakLabel"
-        view.findViewById<TextView>(R.id.detail_best_day).text = state.bestDayOfWeek
-        // ----------------
+        val bestDayText = if(state.bestDayOfWeek == "-" || state.bestDayOfWeek == "Brak danych") {
+            getString(R.string.no_data)
+        } else {
+            state.bestDayOfWeek
+        }
+        view.findViewById<TextView>(R.id.detail_best_day).text = bestDayText
 
         view.findViewById<TextView>(R.id.calendar_month_name).text =
             "${YearMonth.now().month.getDisplayName(TextStyle.FULL, Locale.getDefault())} ${YearMonth.now().year}"
@@ -115,15 +119,19 @@ class HabitDetailFragment : Fragment(R.layout.fragment_habit_detail) {
         progressBar.progress = percentage
 
         val color = when {
-            percentage >= 80 -> 0xFF4CAF50.toInt() // Zielony
-            percentage >= 50 -> 0xFFFFC107.toInt() // Żółty
-            else -> 0xFFF44336.toInt()             // Czerwony
+            percentage >= 80 -> 0xFF4CAF50.toInt()
+            percentage >= 50 -> 0xFFFFC107.toInt()
+            else -> 0xFFF44336.toInt()
         }
 
         progressBar.progressTintList = android.content.res.ColorStateList.valueOf(color)
         percentTextView.setTextColor(color)
 
-        view.findViewById<TextView>(R.id.month_count_text).text = "Regularność: $activeDaysCount / $daysPassed dni"
+        view.findViewById<TextView>(R.id.month_count_text).text = getString(
+            R.string.regularity_format,
+            activeDaysCount,
+            daysPassed
+        )
     }
 
     private fun updateCalendar(timestamps: List<Long>) {

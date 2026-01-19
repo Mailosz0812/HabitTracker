@@ -16,7 +16,6 @@ import java.time.format.TextStyle
 import java.time.temporal.ChronoUnit
 import java.util.Locale
 
-// Definicja stanu UI
 data class HabitDetailState(
     val habit: Habit? = null,
     val entries: List<HabitEntry> = emptyList(),
@@ -29,14 +28,12 @@ class HabitDetailViewModel(
     private val habitRepo: HabitRepo
 ) : ViewModel() {
 
-    // Używamy combine, aby połączyć dane o nawyku i jego wpisach
     val uiState: StateFlow<HabitDetailState> = combine(
-        habitRepo.getHabitById(habitId),      // Funkcja 1
-        habitRepo.getEntriesForHabit(habitId) // Funkcja 2
+        habitRepo.getHabitById(habitId),
+        habitRepo.getEntriesForHabit(habitId)
     ) { habit, entries ->
         val timestamps = entries.map { it.timeStamp }
 
-        // Obliczenia
         val bestStreak = calculateBestStreak(timestamps)
         val bestDay = calculateBestDayOfWeek(timestamps)
 
@@ -47,7 +44,7 @@ class HabitDetailViewModel(
             bestDayOfWeek = bestDay
         )
     }
-        .catch { emit(HabitDetailState()) } // Zabezpieczenie przed błędami (np. brak nawyku)
+        .catch { emit(HabitDetailState()) }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),

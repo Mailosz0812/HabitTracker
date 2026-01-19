@@ -30,15 +30,21 @@ class NotificationWorker(
                 val quotes: List<Quote> = Gson().fromJson(json, type)
                 val todayQuote = quotes.firstOrNull()
 
-                val quoteText = todayQuote?.q ?: "Pamiętaj o swoich nawykach!"
-                val quoteAuthor = todayQuote?.a ?: "HabitTracker"
+
+                val defaultMsg = applicationContext.getString(R.string.notif_default_msg)
+                val defaultAuthor = applicationContext.getString(R.string.notif_default_author)
+                val quoteText = todayQuote?.q ?: defaultMsg
+                val quoteAuthor = todayQuote?.a ?: defaultAuthor
 
                 showNotification(quoteText, quoteAuthor)
 
                 Result.success()
             } catch (e: Exception) {
                 e.printStackTrace()
-                showNotification("Czas uzupełnić nawyki!", "Nie poddawaj się!")
+                showNotification(
+                    applicationContext.getString(R.string.notif_fallback_title),
+                    applicationContext.getString(R.string.notif_fallback_msg)
+                )
                 Result.failure()
             }
         }
@@ -55,7 +61,7 @@ class NotificationWorker(
 
         val builder = NotificationCompat.Builder(applicationContext, HabitApplication.CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setContentTitle("Daily Motivation")
+            .setContentTitle(applicationContext.getString(R.string.notif_title_daily))
             .setContentText("\"$title\" - $message")
             .setStyle(NotificationCompat.BigTextStyle().bigText("\"$title\"\n- $message"))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
