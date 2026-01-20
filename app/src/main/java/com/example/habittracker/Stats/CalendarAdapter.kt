@@ -47,23 +47,20 @@ class CalendarAdapter(private var days: List<DayStatus>) : RecyclerView.Adapter<
             dayText.visibility = View.VISIBLE
             dayText.text = status.date.dayOfMonth.toString()
 
-            // Bardziej wyraziste kolory
             val backgroundColor = when {
-                status.count == 0 -> Color.parseColor("#EEEEEE") // Bardzo jasny szary
-                status.count == 1 -> Color.parseColor("#66BB6A") // Żywy jasny zielony
-                status.count == 2 -> Color.parseColor("#43A047") // Mocny zielony
-                else -> Color.parseColor("#1B5E20")             // Ciemny, głęboki zielony
+                status.count == 0 -> Color.parseColor("#EEEEEE")
+                status.count == 1 -> Color.parseColor("#66BB6A")
+                status.count == 2 -> Color.parseColor("#43A047")
+                else -> Color.parseColor("#1B5E20")
             }
             bgView.backgroundTintList = ColorStateList.valueOf(backgroundColor)
 
-            // Dopasowanie koloru tekstu dla kontrastu
             if (status.count == 0) {
-                dayText.setTextColor(Color.parseColor("#757575")) // Szary tekst na szarym tle
+                dayText.setTextColor(Color.parseColor("#757575"))
             } else {
-                dayText.setTextColor(Color.WHITE) // Biały tekst na zielonym tle
+                dayText.setTextColor(Color.WHITE)
             }
 
-            // Oznaczenie dzisiejszego dnia (np. pogrubienie lub inny akcent, tutaj zostawiamy pogrubienie)
             if (status.date == LocalDate.now()) {
                 dayText.paint.isFakeBoldText = true
             } else {

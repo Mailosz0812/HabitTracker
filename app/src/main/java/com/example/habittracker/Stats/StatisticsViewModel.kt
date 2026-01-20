@@ -26,14 +26,14 @@ class StatisticsViewModel(
             val timestamps = habitEntries.map { it.timeStamp }
 
             val streak = calculateStreak(timestamps)
-            val longestStreak = calculateLongestStreak(timestamps) // Obliczamy rekord
+            val longestStreak = calculateLongestStreak(timestamps)
 
             val (rate, completed, passed) = calculateMonthlyStats(timestamps)
 
             HabitStatisticUi(
                 habit = habit,
                 streak = streak,
-                longestStreak = longestStreak, // Przekazujemy rekord
+                longestStreak = longestStreak,
                 completionRate = rate,
                 daysCompletedInMonth = completed,
                 daysPassedInMonth = passed,
@@ -46,7 +46,6 @@ class StatisticsViewModel(
         initialValue = emptyList()
     )
 
-    // Logika aktualnej serii (bez zmian)
     private fun calculateStreak(timestamps: List<Long>): Int {
         if (timestamps.isEmpty()) return 0
         val dates = timestamps.map {
@@ -68,11 +67,9 @@ class StatisticsViewModel(
         return streak
     }
 
-    // Logika najdłuższej serii (NOWA)
     private fun calculateLongestStreak(timestamps: List<Long>): Int {
         if (timestamps.isEmpty()) return 0
 
-        // Sortujemy daty rosnąco (od najstarszej)
         val dates = timestamps.map {
             java.time.Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
         }.distinct().sorted()
@@ -87,17 +84,14 @@ class StatisticsViewModel(
             } else {
                 val daysBetween = ChronoUnit.DAYS.between(previousDate, date)
                 if (daysBetween == 1L) {
-                    // Kontynuacja serii
                     currentStreak++
                 } else {
-                    // Przerwa w serii
                     if (currentStreak > maxStreak) maxStreak = currentStreak
                     currentStreak = 1
                 }
             }
             previousDate = date
         }
-        // Sprawdzenie ostatniej serii po zakończeniu pętli
         if (currentStreak > maxStreak) maxStreak = currentStreak
 
         return maxStreak
